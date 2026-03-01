@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Three Forces of AI Adoption | National Commission on AI &amp; the American Workforce</title>
+  <meta name="description" content="AI adoption is simultaneously top-down, bottom-up, and outside-in. Three visualization approaches for the National Commission on AI and the American Workforce." />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #0a0f1a;
+      color: #e8edf5;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font-family: inherit; }
+    @media (max-width: 640px) {
+      .assess-grid { grid-template-columns: 1fr !important; }
+      .viz-flex { flex-direction: column !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const COLORS = {
+      bg: "#0a0f1a",
+      surface: "#111827",
+      surfaceLight: "#1a2332",
+      border: "#2a3a4d",
+      text: "#e8edf5",
+      textMuted: "#8899aa",
+      topDown: "#e07a5f",
+      bottomUp: "#81b29a",
+      outsideIn: "#5fa8d3",
+      center: "#f2cc8f",
+    };
+
+    const FORCES = [
+      { key: "topDown", label: "Top-Down", sub: "Leadership & Organizational Policy", color: COLORS.topDown, examples: ["CAIO sets AI strategy", "Procurement decisions", "Usage policies & guardrails", "Training mandates"] },
+      { key: "bottomUp", label: "Bottom-Up", sub: "Worker Experimentation", color: COLORS.bottomUp, examples: ["Shadow AI adoption", "Task-level improvisation", "Peer-to-peer diffusion", "Emergent use cases"] },
+      { key: "outsideIn", label: "Outside-In", sub: "Market & Competitive Pressure", color: COLORS.outsideIn, examples: ["Competitor adoption forcing response", "Client/customer expectations", "Cost pressure & margin squeeze", "Vendor ecosystem shifts"] },
+    ];
+
+    const CASES = [
+      { name: "Fortune 500 (formal AI program)", topDown: 0.75, bottomUp: 0.2, outsideIn: 0.55 },
+      { name: "Mid-market professional services", topDown: 0.35, bottomUp: 0.6, outsideIn: 0.7 },
+      { name: "Freelance knowledge worker", topDown: 0.1, bottomUp: 0.85, outsideIn: 0.5 },
+      { name: "Commodity manufacturing", topDown: 0.4, bottomUp: 0.15, outsideIn: 0.9 },
+      { name: "Healthcare system", topDown: 0.7, bottomUp: 0.3, outsideIn: 0.4 },
+      { name: "Startup / tech-native", topDown: 0.3, bottomUp: 0.8, outsideIn: 0.65 },
+    ];
+
+    function Tab({ label, active, onClick }) {
+      return (
+        <button
+          onClick={onClick}
+          style={{
+            padding: "10px 20px",
+            background: active ? COLORS.surfaceLight : "transparent",
+            color: active ? COLORS.text : COLORS.textMuted,
+            border: "1px solid " + (active ? COLORS.border : "transparent"),
+            borderBottom: active ? "2px solid " + COLORS.center : "2px solid transparent",
+            borderRadius: "6px 6px 0 0",
+            cursor: "pointer",
+            fontSize: "14px",
+            fontWeight: active ? 600 : 400,
+            transition: "all 0.2s",
+            letterSpacing: "0.01em",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {label}
+        </button>
+      );
+    }
+
+    // ─── OPTION 1: VENN DIAGRAM ───
+    function VennDiagram() {
+      const [hovered, setHovered] = useState(null);
+      const r = 110;
+      const cx = 250, cy = 230;
+      const positions = [
+        { x: cx, y: cy - 70 },
+        { x: cx - 65, y: cy + 45 },
+        { x: cx + 65, y: cy + 45 },
+      ];
+
+      return (
+        <div className="viz-flex" style={{ display: "flex", gap: 32, alignItems: "flex-start" }}>
+          <svg viewBox="0 0 500 420" style={{ width: "100%", maxWidth: 480, flexShrink: 0 }}>
+            <defs>
+              {FORCES.map((f, i) => (
+                <radialGradient key={f.key} id={"grad-" + f.key} cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor={f.color} stopOpacity="0.35" />
+                  <stop offset="100%" stopColor={f.color} stopOpacity="0.08" />
+                </radialGradient>
+              ))}
+            </defs>
+            {FORCES.map((f, i) => (
+              <g key={f.key}>
+                <circle
+                  cx={positions[i].x} cy={positions[i].y} r={r}
+                  fill={"url(#grad-" + f.key + ")"}
+                  stroke={f.color}
+                  strokeWidth={hovered === f.key ? 2.5 : 1.2}
+                  strokeOpacity={hovered === f.key ? 1 : 0.5}
+                  style={{ cursor: "pointer", transition: "all 0.3s" }}
+                  onMouseEnter={() => setHovered(f.key)}
+                  onMouseLeave={() => setHovered(null)}
+                />
+              </g>
+            ))}
+            <text x={positions[0].x} y={positions[0].y - 50} textAnchor="middle" fill={COLORS.topDown} fontSize="14" fontWeight="600" fontFamily="'DM Sans', sans-serif">{FORCES[0].label}</text>
+            <text x={positions[0].x} y={positions[0].y - 34} textAnchor="middle" fill={COLORS.textMuted} fontSize="10" fontFamily="'DM Sans', sans-serif">{FORCES[0].sub}</text>
+            <text x={positions[1].x - 40} y={positions[1].y + 70} textAnchor="middle" fill={COLORS.bottomUp} fontSize="14" fontWeight="600" fontFamily="'DM Sans', sans-serif">{FORCES[1].label}</text>
+            <text x={positions[1].x - 40} y={positions[1].y + 86} textAnchor="middle" fill={COLORS.textMuted} fontSize="10" fontFamily="'DM Sans', sans-serif">{FORCES[1].sub}</text>
+            <text x={positions[2].x + 40} y={positions[2].y + 70} textAnchor="middle" fill={COLORS.outsideIn} fontSize="14" fontWeight="600" fontFamily="'DM Sans', sans-serif">{FORCES[2].label}</text>
+            <text x={positions[2].x + 40} y={positions[2].y + 86} textAnchor="middle" fill={COLORS.textMuted} fontSize="10" fontFamily="'DM Sans', sans-serif">{FORCES[2].sub}</text>
+            <text x={cx} y={cy + 6} textAnchor="middle" fill={COLORS.center} fontSize="12" fontWeight="700" fontFamily="'DM Sans', sans-serif">Actual</text>
+            <text x={cx} y={cy + 21} textAnchor="middle" fill={COLORS.center} fontSize="12" fontWeight="700" fontFamily="'DM Sans', sans-serif">Adoption</text>
+          </svg>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ fontSize: 13, color: COLORS.textMuted, lineHeight: 1.7, marginBottom: 16 }}>
+              The overlap zone — where all three forces converge — represents how AI adoption actually unfolds in practice. No single force is sufficient on its own.
+            </div>
+            {hovered && (
+              <div style={{ padding: 14, background: COLORS.surfaceLight, borderRadius: 8, border: "1px solid " + COLORS.border }}>
+                <div style={{ color: FORCES.find(f => f.key === hovered).color, fontWeight: 600, fontSize: 14, marginBottom: 8 }}>
+                  {FORCES.find(f => f.key === hovered).label}
+                </div>
+                {FORCES.find(f => f.key === hovered).examples.map((ex, i) => (
+                  <div key={i} style={{ color: COLORS.textMuted, fontSize: 12, padding: "3px 0", paddingLeft: 12, borderLeft: "2px solid " + FORCES.find(f => f.key === hovered).color + "33" }}>{ex}</div>
+                ))}
+              </div>
+            )}
+            {!hovered && (
+              <div style={{ color: COLORS.textMuted, fontSize: 12, fontStyle: "italic" }}>Hover over a circle to see examples</div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ─── OPTION 2: TRIANGLE PLOT ───
+    function TrianglePlot() {
+      const [activeCase, setActiveCase] = useState(null);
+
+      const w = 460, h = 420;
+      const pad = 60;
+      const A = { x: w / 2, y: pad };
+      const B = { x: pad, y: h - pad };
+      const C = { x: w - pad, y: h - pad };
+
+      function toXY(td, bu, oi) {
+        const sum = td + bu + oi || 1;
+        const a = td / sum, b = bu / sum, c = oi / sum;
+        return { x: a * A.x + b * B.x + c * C.x, y: a * A.y + b * B.y + c * C.y };
+      }
+
+      const points = CASES.map(c => ({ ...c, ...toXY(c.topDown, c.bottomUp, c.outsideIn) }));
+
+      return (
+        <div className="viz-flex" style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+          <svg viewBox={"0 0 " + w + " " + h} style={{ width: "100%", maxWidth: 460, flexShrink: 0 }}>
+            <defs>
+              <linearGradient id="triFill" x1="50%" y1="0%" x2="50%" y2="100%">
+                <stop offset="0%" stopColor={COLORS.topDown} stopOpacity="0.06" />
+                <stop offset="50%" stopColor={COLORS.center} stopOpacity="0.04" />
+                <stop offset="100%" stopColor={COLORS.bottomUp} stopOpacity="0.06" />
+              </linearGradient>
+            </defs>
+            <polygon
+              points={A.x + "," + A.y + " " + B.x + "," + B.y + " " + C.x + "," + C.y}
+              fill="url(#triFill)" stroke={COLORS.border} strokeWidth="1.5"
+            />
+            {[0.25, 0.5, 0.75].map(t => {
+              const lp = { x: A.x + (B.x - A.x) * t, y: A.y + (B.y - A.y) * t };
+              const rp = { x: A.x + (C.x - A.x) * t, y: A.y + (C.y - A.y) * t };
+              return <line key={t} x1={lp.x} y1={lp.y} x2={rp.x} y2={rp.y} stroke={COLORS.border} strokeWidth="0.5" strokeDasharray="4,4" />;
+            })}
+            <text x={A.x} y={A.y - 16} textAnchor="middle" fill={COLORS.topDown} fontSize="13" fontWeight="700" fontFamily="'DM Sans', sans-serif">TOP-DOWN</text>
+            <text x={A.x} y={A.y - 2} textAnchor="middle" fill={COLORS.textMuted} fontSize="9.5" fontFamily="'DM Sans', sans-serif">Leadership</text>
+            <text x={B.x - 8} y={B.y + 20} textAnchor="middle" fill={COLORS.bottomUp} fontSize="13" fontWeight="700" fontFamily="'DM Sans', sans-serif">BOTTOM-UP</text>
+            <text x={B.x - 8} y={B.y + 34} textAnchor="middle" fill={COLORS.textMuted} fontSize="9.5" fontFamily="'DM Sans', sans-serif">Workers</text>
+            <text x={C.x + 8} y={C.y + 20} textAnchor="middle" fill={COLORS.outsideIn} fontSize="13" fontWeight="700" fontFamily="'DM Sans', sans-serif">OUTSIDE-IN</text>
+            <text x={C.x + 8} y={C.y + 34} textAnchor="middle" fill={COLORS.textMuted} fontSize="9.5" fontFamily="'DM Sans', sans-serif">Market</text>
+            {points.map((p, i) => {
+              const isActive = activeCase === i;
+              return (
+                <g key={i}>
+                  {isActive && <circle cx={p.x} cy={p.y} r={14} fill={COLORS.center} opacity={0.15} />}
+                  <circle
+                    cx={p.x} cy={p.y} r={6}
+                    fill={isActive ? COLORS.center : COLORS.text}
+                    fillOpacity={isActive ? 1 : 0.7}
+                    stroke={isActive ? COLORS.center : "none"} strokeWidth={2}
+                    style={{ cursor: "pointer", transition: "all 0.2s" }}
+                    onMouseEnter={() => setActiveCase(i)}
+                    onMouseLeave={() => setActiveCase(null)}
+                  />
+                  {isActive && (
+                    <g>
+                      <rect x={p.x + 12} y={p.y - 24} width={Math.max(p.name.length * 6.5 + 16, 120)} height={28} rx={4} fill={COLORS.surface} stroke={COLORS.border} />
+                      <text x={p.x + 20} y={p.y - 6} fill={COLORS.text} fontSize="11" fontFamily="'DM Sans', sans-serif">{p.name}</text>
+                    </g>
+                  )}
+                </g>
+              );
+            })}
+          </svg>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ fontSize: 13, color: COLORS.textMuted, lineHeight: 1.7, marginBottom: 16 }}>
+              Each point represents a firm or sector type, plotted by which force dominates its AI adoption. Proximity to a vertex = stronger influence of that force.
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.text, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>Case Studies</div>
+            {CASES.map((c, i) => (
+              <div
+                key={i}
+                onMouseEnter={() => setActiveCase(i)}
+                onMouseLeave={() => setActiveCase(null)}
+                style={{
+                  padding: "8px 10px", marginBottom: 4, borderRadius: 6,
+                  background: activeCase === i ? COLORS.surfaceLight : "transparent",
+                  border: "1px solid " + (activeCase === i ? COLORS.border : "transparent"),
+                  cursor: "pointer", transition: "all 0.15s",
+                }}
+              >
+                <div style={{ fontSize: 12, color: activeCase === i ? COLORS.text : COLORS.textMuted }}>{c.name}</div>
+                {activeCase === i && (
+                  <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
+                    {[
+                      { label: "Top-Down", val: c.topDown, color: COLORS.topDown },
+                      { label: "Bottom-Up", val: c.bottomUp, color: COLORS.bottomUp },
+                      { label: "Outside-In", val: c.outsideIn, color: COLORS.outsideIn },
+                    ].map(d => (
+                      <div key={d.label} style={{ flex: 1 }}>
+                        <div style={{ fontSize: 9, color: d.color, marginBottom: 3 }}>{d.label}</div>
+                        <div style={{ height: 4, background: d.color + "22", borderRadius: 2 }}>
+                          <div style={{ width: (d.val * 100) + "%", height: "100%", background: d.color, borderRadius: 2, transition: "width 0.3s" }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ─── OPTION 3: FLOW DIAGRAM ───
+    function FlowDiagram() {
+      const [activeStream, setActiveStream] = useState(null);
+
+      const streams = [
+        {
+          key: "outsideIn", label: "Market & Competitive Pressure", color: COLORS.outsideIn, y: 40,
+          feedsInto: "Competitive dynamics force leadership's hand; validated returns encourage worker buy-in",
+          mechanisms: ["Competitor launches AI product", "Clients demand AI-enabled services", "Cost/margin pressure mounts", "Vendor ecosystems shift"],
+        },
+        {
+          key: "topDown", label: "Leadership & Organizational Policy", color: COLORS.topDown, y: 155,
+          feedsInto: "Policy formalizes bottom-up experiments; market signals shape strategic direction",
+          mechanisms: ["CEO/CAIO sets AI strategy", "Procurement & tool selection", "Usage policies & governance", "Training & upskilling mandates"],
+        },
+        {
+          key: "bottomUp", label: "Worker Experimentation", color: COLORS.bottomUp, y: 270,
+          feedsInto: "Emergent use cases surface; productivity gains create demand for formal support",
+          mechanisms: ["Shadow AI tool adoption", "Task-level improvisation", "Peer-to-peer knowledge sharing", "Productivity hacks spread organically"],
+        },
+      ];
+
+      const convergenceX = 400;
+      const boxH = 70;
+
+      return (
+        <div>
+          <svg viewBox="0 0 600 380" style={{ width: "100%", maxWidth: 600 }}>
+            <defs>
+              {streams.map(s => (
+                <linearGradient key={s.key} id={"flow-" + s.key} x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor={s.color} stopOpacity="0.5" />
+                  <stop offset="60%" stopColor={s.color} stopOpacity="0.3" />
+                  <stop offset="100%" stopColor={COLORS.center} stopOpacity="0.4" />
+                </linearGradient>
+              ))}
+              <linearGradient id="convergenceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor={COLORS.topDown} stopOpacity="0.15" />
+                <stop offset="50%" stopColor={COLORS.center} stopOpacity="0.2" />
+                <stop offset="100%" stopColor={COLORS.bottomUp} stopOpacity="0.15" />
+              </linearGradient>
+            </defs>
+            {streams.map((s, i) => {
+              const isActive = activeStream === s.key;
+              return (
+                <g key={s.key}>
+                  <rect
+                    x={20} y={s.y} width={convergenceX - 30} height={boxH} rx={6}
+                    fill={"url(#flow-" + s.key + ")"} stroke={s.color}
+                    strokeWidth={isActive ? 2 : 0.8} strokeOpacity={isActive ? 0.8 : 0.3}
+                    style={{ cursor: "pointer", transition: "all 0.2s" }}
+                    onMouseEnter={() => setActiveStream(s.key)}
+                    onMouseLeave={() => setActiveStream(null)}
+                  />
+                  <text x={32} y={s.y + 28} fill={s.color} fontSize="13" fontWeight="700" fontFamily="'DM Sans', sans-serif">{s.label}</text>
+                  {isActive && s.mechanisms.map((m, j) => (
+                    <text key={j} x={36} y={s.y + 44 + j * 13} fill={COLORS.textMuted} fontSize="9.5" fontFamily="'DM Sans', sans-serif">{"• " + m}</text>
+                  ))}
+                  <line x1={convergenceX - 10} y1={s.y + boxH / 2} x2={convergenceX + 15} y2={190} stroke={s.color} strokeWidth={isActive ? 2 : 1} strokeOpacity={0.5} strokeDasharray={isActive ? "none" : "4,3"} />
+                  <polygon points={(convergenceX + 12) + ",185 " + (convergenceX + 12) + ",195 " + (convergenceX + 20) + ",190"} fill={s.color} opacity={0.5} />
+                </g>
+              );
+            })}
+            <rect x={convergenceX + 20} y={130} width={155} height={120} rx={10} fill="url(#convergenceGrad)" stroke={COLORS.center} strokeWidth="1.5" strokeOpacity="0.6" />
+            <text x={convergenceX + 97} y={172} textAnchor="middle" fill={COLORS.center} fontSize="14" fontWeight="700" fontFamily="'DM Sans', sans-serif">Actual</text>
+            <text x={convergenceX + 97} y={190} textAnchor="middle" fill={COLORS.center} fontSize="14" fontWeight="700" fontFamily="'DM Sans', sans-serif">Adoption</text>
+            <text x={convergenceX + 97} y={208} textAnchor="middle" fill={COLORS.center} fontSize="14" fontWeight="700" fontFamily="'DM Sans', sans-serif">Pattern</text>
+            <text x={convergenceX + 97} y={235} textAnchor="middle" fill={COLORS.textMuted} fontSize="9" fontFamily="'DM Sans', sans-serif">Tasks → Roles → Organizations</text>
+            <path d={"M " + (convergenceX + 97) + " 252 Q " + (convergenceX + 97) + " 340 200 350 Q 10 360 10 300 L 10 " + (streams[2].y + boxH)} fill="none" stroke={COLORS.textMuted} strokeWidth="0.8" strokeDasharray="3,3" strokeOpacity="0.4" />
+            <text x={120} y={355} textAnchor="middle" fill={COLORS.textMuted} fontSize="8.5" fontFamily="'DM Sans', sans-serif" fontStyle="italic">Feedback: outcomes reshape all three forces</text>
+          </svg>
+          {activeStream && (
+            <div style={{ padding: 12, background: COLORS.surfaceLight, borderRadius: 8, border: "1px solid " + COLORS.border, marginTop: 8 }}>
+              <div style={{ fontSize: 12, color: streams.find(s => s.key === activeStream).color, fontWeight: 600, marginBottom: 4 }}>
+                How this force feeds adoption:
+              </div>
+              <div style={{ fontSize: 12, color: COLORS.textMuted, lineHeight: 1.6 }}>
+                {streams.find(s => s.key === activeStream).feedsInto}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ─── MAIN APP ───
+    function App() {
+      const [activeTab, setActiveTab] = useState(0);
+
+      const tabs = [
+        { label: "Option 1: Venn Diagram", component: React.createElement(VennDiagram) },
+        { label: "Option 2: Triangle Plot", component: React.createElement(TrianglePlot) },
+        { label: "Option 3: Flow Diagram", component: React.createElement(FlowDiagram) },
+      ];
+
+      const assessments = [
+        {
+          title: "Venn Diagram",
+          pros: "Intuitive; immediately communicates convergence; familiar form factor for policy audiences.",
+          cons: "Static — doesn't show variation across sectors or the dynamic interplay between forces. Hard to use as a diagnostic tool.",
+          bestFor: "Opening slide or executive summary. Sets up the conceptual frame quickly.",
+        },
+        {
+          title: "Triangle Plot",
+          pros: "Analytically powerful — plots real variation, works as a diagnostic ('where does your sector sit?'), invites discussion.",
+          cons: "Ternary plots are less intuitive for non-technical audiences. Requires explanation.",
+          bestFor: "Commission working sessions, research pods, sector-specific analysis. The most useful for ongoing analytical work.",
+        },
+        {
+          title: "Flow Diagram",
+          pros: "Best at showing dynamics and feedback loops — how forces interact over time. Captures the insight that tasks change before roles.",
+          cons: "More complex to read; harder to use for comparison across sectors.",
+          bestFor: "Narrative explanation of how adoption actually unfolds. Good for the written report or a detailed briefing.",
+        },
+      ];
+
+      return (
+        <div style={{ padding: "32px 24px" }}>
+          <div style={{ maxWidth: 820, margin: "0 auto" }}>
+            {/* Header */}
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.15em", color: COLORS.center, marginBottom: 8, fontWeight: 600 }}>
+                National Commission on AI & the American Workforce
+              </div>
+              <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 400, margin: "0 0 8px 0", lineHeight: 1.2, color: COLORS.text }}>
+                Three Forces of AI Adoption
+              </h1>
+              <p style={{ color: COLORS.textMuted, fontSize: 14, margin: 0, lineHeight: 1.6 }}>
+                AI adoption is simultaneously{" "}
+                <span style={{ color: COLORS.topDown }}>top-down</span> (leadership policy),{" "}
+                <span style={{ color: COLORS.bottomUp }}>bottom-up</span> (worker experimentation), and{" "}
+                <span style={{ color: COLORS.outsideIn }}>outside-in</span> (market pressure). Three visualization approaches compared.
+              </p>
+            </div>
+
+            {/* Tabs */}
+            <div style={{ display: "flex", gap: 4, borderBottom: "1px solid " + COLORS.border, marginBottom: 24, overflowX: "auto" }}>
+              {tabs.map((t, i) => (
+                <Tab key={i} label={t.label} active={activeTab === i} onClick={() => setActiveTab(i)} />
+              ))}
+            </div>
+
+            {/* Active visualization */}
+            <div style={{
+              background: COLORS.surface,
+              border: "1px solid " + COLORS.border,
+              borderRadius: 12,
+              padding: 24,
+              marginBottom: 24,
+              minHeight: 350,
+            }}>
+              {tabs[activeTab].component}
+            </div>
+
+            {/* Assessment */}
+            <div style={{
+              background: COLORS.surfaceLight,
+              border: "1px solid " + COLORS.border,
+              borderRadius: 10,
+              padding: 20,
+            }}>
+              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: COLORS.center, marginBottom: 12, fontWeight: 600 }}>
+                Assessment: {assessments[activeTab].title}
+              </div>
+              <div className="assess-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+                {[
+                  { label: "Strengths", value: assessments[activeTab].pros, color: COLORS.bottomUp },
+                  { label: "Limitations", value: assessments[activeTab].cons, color: COLORS.topDown },
+                  { label: "Best Use", value: assessments[activeTab].bestFor, color: COLORS.outsideIn },
+                ].map(a => (
+                  <div key={a.label}>
+                    <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: a.color, marginBottom: 6, fontWeight: 600 }}>{a.label}</div>
+                    <div style={{ fontSize: 12, color: COLORS.textMuted, lineHeight: 1.6 }}>{a.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Recommendation */}
+            <div style={{
+              marginTop: 20,
+              padding: "16px 20px",
+              background: COLORS.center + "08",
+              border: "1px solid " + COLORS.center + "30",
+              borderRadius: 10,
+            }}>
+              <div style={{ fontSize: 12, color: COLORS.center, fontWeight: 600, marginBottom: 6 }}>Recommendation</div>
+              <div style={{ fontSize: 13, color: COLORS.textMuted, lineHeight: 1.7 }}>
+                Use all three, sequenced: the <strong style={{ color: COLORS.text }}>Venn diagram</strong> to introduce the concept, the <strong style={{ color: COLORS.text }}>triangle plot</strong> for analytical work and sector-level diagnosis, and the <strong style={{ color: COLORS.text }}>flow diagram</strong> to explain the dynamic process in the written report.
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{ marginTop: 32, paddingTop: 16, borderTop: "1px solid " + COLORS.border, fontSize: 11, color: COLORS.textMuted }}>
+              Prepared for the National Commission on AI and the American Workforce · American Enterprise Institute · 2026
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(React.createElement(App), document.getElementById("root"));
+  </script>
+</body>
+</html>
